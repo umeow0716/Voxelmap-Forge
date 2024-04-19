@@ -376,7 +376,7 @@ public class CachedRegion implements IThreadCompleteListener, ISettingsAndLighti
         if (this.closed || full) {
             return;
         }
-        final File directory = new File(DimensionType.getStorageFolder(this.worldServer.dimension(), this.worldServer.getServer().getWorldPath(LevelResource.ROOT).normalize().toFile()), "region");
+        final File directory = new File(DimensionType.getStorageFolder(this.worldServer.dimension(), this.worldServer.getServer().getWorldPath(LevelResource.ROOT).normalize()).toFile(), "region");
         final File regionFile = new File(directory, "r." + (int)Math.floor(this.x / 2) + "." + (int)Math.floor(this.z / 2) + ".mca");
         if (!regionFile.exists()) {
             return;
@@ -401,7 +401,7 @@ public class CachedRegion implements IThreadCompleteListener, ISettingsAndLighti
                                     final ChunkPos chunkPos = new ChunkPos(this.x * 16 + t3, this.z * 16 + s3);
                                     final CompoundTag rawNbt = this.chunkLoader.read(chunkPos);
                                     if (rawNbt != null) {
-                                        final CompoundTag nbt = this.chunkLoader.upgradeChunkTag(this.worldServer.dimension(), () -> this.worldServer.getDataStorage(), rawNbt);
+                                        final CompoundTag nbt = this.chunkLoader.upgradeChunkTag(this.worldServer.dimension(), () -> this.worldServer.getDataStorage(), rawNbt, null);
                                         if (!this.closed && nbt.contains("Level", 10)) {
                                             final CompoundTag level = nbt.getCompound("Level");
                                             final int chunkX = level.getInt("xPos");
@@ -506,7 +506,7 @@ public class CachedRegion implements IThreadCompleteListener, ISettingsAndLighti
             CachedRegion.loadedChunkCount = 0;
             CachedRegion.tickLock.writeLock().lock();
             try {
-                final CompletableFuture<Void> tickFuture = CompletableFuture.runAsync(() -> this.chunkProvider.tick(() -> true), (Executor)this.executor);
+                final CompletableFuture<Void> tickFuture = CompletableFuture.runAsync(() -> this.chunkProvider.tick(() -> true, true), (Executor)this.executor);
                 final long tickTime = System.currentTimeMillis();
                 if (CachedRegion.debug) {
                     System.out.println(Thread.currentThread().getName() + " starting chunk GC tick");

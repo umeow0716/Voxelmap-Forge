@@ -265,7 +265,7 @@ public class PersistentMap implements IPersistentMap, IChangeObserver
         blockPos = blockPos.withXYZ(startX + imageX, 0, startZ + imageY);
         int biomeID = 0;
         if (!chunk.isEmpty()) {
-            biomeID = world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getId(world.getBiome((BlockPos)blockPos));
+            biomeID = world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getId(world.getBiome(blockPos).value());
         }
         else {
             biomeID = -1;

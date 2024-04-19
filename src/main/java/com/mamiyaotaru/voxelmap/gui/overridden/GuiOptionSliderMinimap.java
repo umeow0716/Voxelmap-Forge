@@ -34,7 +34,7 @@ public class GuiOptionSliderMinimap extends AbstractSliderButton
     }
     
     public void setValue(final float value) {
-        if (!this.isHovered()) {
+        if (!this.isHovered) {
             this.value = value;
             this.updateMessage();
         }

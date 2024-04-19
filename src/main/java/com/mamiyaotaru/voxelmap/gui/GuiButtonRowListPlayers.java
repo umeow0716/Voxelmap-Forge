@@ -181,7 +181,7 @@ public class GuiButtonRowListPlayers extends ObjectSelectionList<GuiButtonRowLis
                 if (id != -1) {
                     this.drawIconForButton(PoseStack, button, id);
                 }
-                if (button.isHovered() && mouseY >= GuiButtonRowListPlayers.this.y0 && mouseY <= GuiButtonRowListPlayers.this.y1) {
+                if (button.isHoveredOrFocused() && mouseY >= GuiButtonRowListPlayers.this.y0 && mouseY <= GuiButtonRowListPlayers.this.y1) {
                     final TranslatableComponent tooltip = new TranslatableComponent("minimap.waypointshare.sharewithname", new Object[] { button.getMessage() });
                     GuiSelectPlayer.setTooltip(GuiButtonRowListPlayers.this.parentGui, tooltip);
                 }

@@ -80,7 +80,7 @@ public class GLUtils
     }
     
     public static void setupFrameBufferUsingMinecraftUnrolled() {
-        RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+        // RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
         GLUtils.fboID = GL30.glGenFramebuffers();
         GLUtils.fboTextureID = GL11.glGenTextures();
         GL11.glBindTexture(3553, GLUtils.depthTextureID = GL11.glGenTextures());

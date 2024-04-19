@@ -682,7 +682,7 @@ public class Map implements Runnable, IMap
             this.needSkyColor = true;
             this.lastAboveHorizon = aboveHorizon;
         }
-        final int biomeID = this.world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getId((Biome)this.world.getBiome((BlockPos)this.blockPos.withXYZ(GameVariableAccessShim.xCoord(), GameVariableAccessShim.yCoord(), GameVariableAccessShim.zCoord())));
+        final int biomeID = this.world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getId(this.world.getBiome((BlockPos)this.blockPos.withXYZ(GameVariableAccessShim.xCoord(), GameVariableAccessShim.yCoord(), GameVariableAccessShim.zCoord())).value());
         if (biomeID != this.lastBiome) {
             this.needSkyColor = true;
             this.lastBiome = biomeID;
@@ -1061,7 +1061,7 @@ public class Map implements Runnable, IMap
         int biomeID = 0;
         if (needBiome) {
             if (world.hasChunkAt((BlockPos)this.blockPos)) {
-                biomeID = world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getId((Biome)world.getBiome((BlockPos)this.blockPos));
+                biomeID = world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getId(world.getBiome(this.blockPos).value());
             }
             else {
                 biomeID = -1;

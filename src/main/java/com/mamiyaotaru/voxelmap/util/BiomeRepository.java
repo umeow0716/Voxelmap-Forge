@@ -46,7 +46,6 @@ public class BiomeRepository
         BiomeRepository.DEFAULT = (Biome)BuiltinRegistries.BIOME.get(Biomes.OCEAN.location());
         BiomeRepository.FOREST = (Biome)BuiltinRegistries.BIOME.get(Biomes.FOREST.location());
         BiomeRepository.SWAMP = (Biome)BuiltinRegistries.BIOME.get(Biomes.SWAMP.location());
-        BiomeRepository.SWAMP_HILLS = (Biome)BuiltinRegistries.BIOME.get(Biomes.SWAMP_HILLS.location());
     }
     
     public static int getBiomeId(final Biome biome) {

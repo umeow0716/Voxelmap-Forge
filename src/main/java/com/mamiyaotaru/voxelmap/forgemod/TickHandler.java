@@ -10,8 +10,8 @@ import net.minecraftforge.client.event.ClientChatEvent;
 import com.mamiyaotaru.voxelmap.util.CommandUtils;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import com.mamiyaotaru.voxelmap.interfaces.AbstractVoxelMap;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderLevelLastEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import com.mamiyaotaru.voxelmap.util.ReflectionUtils;
 import net.minecraft.client.Minecraft;
@@ -49,9 +49,9 @@ public class TickHandler
     }
     
     @SubscribeEvent
-    public void onRenderHand(final RenderWorldLastEvent event) {
+    public void onRenderHand(final RenderLevelLastEvent event) {
     	try {
-    		this.voxelMap.getWaypointManager().renderWaypoints(event.getPartialTicks(), event.getMatrixStack(), AbstractVoxelMap.getInstance().getMapOptions().showBeacons, AbstractVoxelMap.getInstance().getMapOptions().showWaypoints, true, true);
+    		this.voxelMap.getWaypointManager().renderWaypoints(event.getPartialTick(), event.getPoseStack(), AbstractVoxelMap.getInstance().getMapOptions().showBeacons, AbstractVoxelMap.getInstance().getMapOptions().showWaypoints, true, true);
         }
         catch (final Exception ex) {}
     }

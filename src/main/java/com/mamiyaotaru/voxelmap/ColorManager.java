@@ -24,6 +24,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
+
+import it.unimi.dsi.fastutil.longs.Long2FloatLinkedOpenHashMap;
+
+import com.google.common.collect.ImmutableList;
+import com.ibm.icu.impl.UResource.Array;
 import com.mamiyaotaru.voxelmap.forgemod.Share;
 import java.awt.image.RasterFormatException;
 import java.util.List;
@@ -36,6 +41,7 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -55,8 +61,10 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.level.chunk.ChunkBiomeContainer;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.levelgen.LegacyRandomSource;
+import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.synth.PerlinSimplexNoise;
 import net.minecraft.world.level.material.Material;
 
 import java.awt.Graphics;
@@ -447,7 +455,7 @@ public class ColorManager implements IColorManager
                     gfx.drawImage(waterColor, 0, 0, null);
                     gfx.dispose();
                     final Biome biome = BiomeRepository.FOREST;
-                    double var1 = Mth.clamp(biome.getTemperature(new BlockPos(0, 64, 0)), 0.0f, 1.0f);
+                    double var1 = Mth.clamp(ColorManager.getTemperature(biome, new BlockPos(0, 64, 0)), 0.0f, 1.0f);
                     double var2 = Mth.clamp(biome.getDownfall(), 0.0f, 1.0f);
                     var2 *= var1;
                     var1 = 1.0 - var1;
@@ -725,13 +733,18 @@ public class ColorManager implements IColorManager
             final LevelChunk chunk = (LevelChunk) world.getChunk((BlockPos)loopBlockPos.withXYZ(fakeX, 0, fakeZ));
             final BlockState actualBlockState = world.getBlockState((BlockPos)loopBlockPos);
             chunk.setBlockState((BlockPos)loopBlockPos, blockState, false);
-            final ChunkBiomeContainer biomeArray = chunk.getBiomes();
-            final Biome[] currentBiomes = (Biome[])ReflectionUtils.getPrivateFieldValueByType(biomeArray, ChunkBiomeContainer.class, Biome[].class);
-            final Biome[] originalBiomes = new Biome[currentBiomes.length];
-            System.arraycopy(currentBiomes, 0, originalBiomes, 0, currentBiomes.length);
-            Arrays.fill(currentBiomes, world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).byId((int)biomeID));
+            List<Biome> currentBiomes = new ArrayList<Biome>();
+            for(BlockPos blockPos : chunk.getBlockEntitiesPos()) {
+            	Biome biome = world.getBiome(blockPos).value();
+            	if(!currentBiomes.contains(biome)) continue;
+            	
+            	currentBiomes.add(biome);
+            }
+            final Biome[] originalBiomes = new Biome[currentBiomes.size()];
+            System.arraycopy(currentBiomes, 0, originalBiomes, 0, currentBiomes.size());
+            Arrays.fill(currentBiomes.toArray(), world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).byId((int)biomeID));
             tint = (this.game.getBlockColors().getColor(blockState, (BlockAndTintGetter)world, (BlockPos)loopBlockPos, 1) | 0xFF000000);
-            System.arraycopy(originalBiomes, 0, currentBiomes, 0, currentBiomes.length);
+            System.arraycopy(originalBiomes, 0, currentBiomes, 0, currentBiomes.size());
             chunk.setBlockState((BlockPos)loopBlockPos, actualBlockState, false);
         }
         catch (final Exception ex) {}
@@ -763,8 +776,8 @@ public class ColorManager implements IColorManager
             final LevelChunk chunk = (LevelChunk) world.getChunk((BlockPos) loopBlockPos.withXYZ(fakeX, 64, fakeZ));
             final BlockState actualBlockState = world.getBlockState((BlockPos)loopBlockPos);
             chunk.setBlockState((BlockPos)loopBlockPos, blockState, false);
-            final ChunkBiomeContainer biomeArray = chunk.getBiomes();
-            final Biome[] currentBiomes = (Biome[])ReflectionUtils.getPrivateFieldValueByType(biomeArray, ChunkBiomeContainer.class, Biome[].class);
+            final Holder<Biome> biomeArray = (Holder<Biome>) ReflectionUtils.getPrivateFieldValueByType(chunk, LevelChunk.class, Holder.class);
+            final Biome[] currentBiomes = (Biome[]) ReflectionUtils.getPrivateFieldValueByType(biomeArray, Holder.class, Biome[].class);
             final Biome[] originalBiomes = new Biome[currentBiomes.length];
             System.arraycopy(currentBiomes, 0, originalBiomes, 0, currentBiomes.length);
             for (int biomeID = 0; biomeID < this.sizeOfBiomeArray; ++biomeID) {
@@ -815,7 +828,7 @@ public class ColorManager implements IColorManager
                         for (int s = blockPos.getZ() - 1; s <= blockPos.getZ() + 1; ++s) {
                             int biomeID = 0;
                             if (live) {
-                                biomeID = world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getId(world.getBiome((BlockPos)loopBlockPos.withXYZ(t, blockPos.getY(), s)));
+                                biomeID = world.registryAccess().registryOrThrow(Registry.BIOME_REGISTRY).getId(world.getBiome(loopBlockPos.withXYZ(t, blockPos.getY(), s)).value());
                             }
                             else {
                                 int dataX = t - startX;
@@ -1498,7 +1511,7 @@ public class ColorManager implements IColorManager
                         tintMult = (tintColorsBuff.getRGB(t, Math.min(Math.max(0, s * heightMultiplier - yOffset), tintColorsBuff.getHeight() - 1)) & 0xFFFFFF);
                     }
                     else {
-                        double var1 = Mth.clamp(biome.getTemperature(new BlockPos(0, 64, 0)), 0.0f, 1.0f);
+                        double var1 = Mth.clamp(ColorManager.getTemperature(biome, new BlockPos(0, 64, 0)), 0.0f, 1.0f);
                         double var2 = Mth.clamp(biome.getDownfall(), 0.0f, 1.0f);
                         var2 *= var1;
                         var1 = 1.0 - var1;
@@ -1562,6 +1575,38 @@ public class ColorManager implements IColorManager
         }
         catch (final NumberFormatException e2) {
             return null;
+        }
+    }
+    
+    public static float getHeightAdjustedTemperature(Biome biome, BlockPos blockPos) {
+    	final PerlinSimplexNoise TEMPERATURE_NOISE = new PerlinSimplexNoise(new WorldgenRandom(new LegacyRandomSource(1234L)), ImmutableList.of(0));
+    	
+    	Biome.ClimateSettings climateSettings = (Biome.ClimateSettings) ReflectionUtils.getPrivateFieldValueByType(biome, biome.getClass(), Biome.ClimateSettings.class);
+        float f = climateSettings.temperatureModifier.modifyTemperature(blockPos, biome.getBaseTemperature());
+        if (blockPos.getY() > 80) {
+           float f1 = (float)(TEMPERATURE_NOISE.getValue((double)((float)blockPos.getX() / 8.0F), (double)((float)blockPos.getZ() / 8.0F), false) * 8.0D);
+           return f - (f1 + (float)blockPos.getY() - 80.0F) * 0.05F / 40.0F;
+        } else {
+           return f;
+        }
+     }
+    
+    public static float getTemperature(Biome biome, BlockPos blockPos) {
+    	final ThreadLocal<Long2FloatLinkedOpenHashMap> temperatureCache = (ThreadLocal<Long2FloatLinkedOpenHashMap>) ReflectionUtils.getPrivateFieldValueByType(biome, biome.getClass(), ThreadLocal.class);
+    	
+    	long i = blockPos.asLong();
+        Long2FloatLinkedOpenHashMap long2floatlinkedopenhashmap = temperatureCache.get();
+        float f = long2floatlinkedopenhashmap.get(i);
+        if (!Float.isNaN(f)) {
+           return f;
+        } else {
+           float f1 = ColorManager.getHeightAdjustedTemperature(biome, blockPos);
+           if (long2floatlinkedopenhashmap.size() == 1024) {
+              long2floatlinkedopenhashmap.removeFirstFloat();
+           }
+
+           long2floatlinkedopenhashmap.put(i, f1);
+           return f1;
         }
     }
     
