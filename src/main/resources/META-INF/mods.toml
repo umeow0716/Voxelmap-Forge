@@ -1,22 +1,21 @@
-modLoader="javafml" #mandatory
+modLoader="javafml"
 loaderVersion="[40,)"
 license="All rights reserved"
 
-[[mods]] #mandatory
-modId="voxelmap" #mandatory
-version="${file.jarVersion}" #mandatory
-displayName="VoxelMap" #mandatory
-logoFile="icon.png" #optional
-credits="Thanks for this example mod goes to Java" #optional
+[[mods]]
+modId="voxelmap"
+version="${file.jarVersion}"
+displayName="VoxelMap"
+logoFile="icon.png"
 authors="MamiyaOtaru"
 description='''
 Minimap and world map
 '''
 
-[[dependencies.voxelmap]] #optional
-    modId="forge" #mandatory
-    mandatory=true #mandatory
-    versionRange="[40,)" #mandatory
+[[dependencies.voxelmap]]
+    modId="forge"
+    mandatory=true
+    versionRange="[40,)"
     ordering="NONE"
     side="CLIENT"
 
